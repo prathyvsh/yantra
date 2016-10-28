@@ -1,8 +1,8 @@
 * Mandala
   
 Mandala is a declarative graphics programming library. It describes, manipulates,
-and renders geometry in a data-oriented functional programming approach.
+and renders geometry using data-oriented functional programming.
 
 Feedback: http://twitter.com/prathyvsh
 
-Copyright (c) 2016 Prathyush Pramod, Pranav Pramod, Prabros.
+Copyright (c) 2016 Prabros.
