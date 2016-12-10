@@ -318,7 +318,7 @@
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
 
-    const exports = {parametrize, gmap, range, steps, circle, rect, g, ring, rotate, replicate, row, col, render, radToDeg, rgba, setGlobals};
+    const exports = {parametrize, gmap, range, steps, circle, rect, g, ring, rotate, replicate, row, col, render, radToDeg, rgba, surface, setGlobals};
 
     global.mandala = exports;
 

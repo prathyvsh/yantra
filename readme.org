@@ -1,7 +1,12 @@
 * Mandala
   
-Mandala is a declarative graphics programming library. It describes, manipulates,
+Mandala is a declarative vector graphics library. It describes, manipulates,
 and renders geometry using data-oriented functional programming.
+
+You can dive into the [[http://prabros.com/bazaar/mandala/docs.html][docs]] section to learn more about the underlying
+abstractions or if you are more of a hands-on person, check out the [[http://prabros.com/bazaar/mandala/demos.html][demos]].
+
+Homepage http://prabros.com/bazaar/mandala/home.html
 
 Feedback: http://twitter.com/prathyvsh
 
