@@ -146,7 +146,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "g"]);
+    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "polyline", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -169,12 +169,20 @@
     const normalizeEllipse = c => c;
 
     const normalizePolygon = p => {
-        
+
         let {points} = p;
 
         return (isArr(points) ? merge(p, {points: points.join(" ")}) : p);
 
- }
+    }
+
+    const normalizePolyline = p => {
+
+        let {points} = p;
+
+        return (isArr(points) ? merge(p, {points: points.join(" ")}) : p);
+
+    }
 
     const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
@@ -199,7 +207,7 @@
 
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon};
+    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon, polyline: normalizePolyline};
 
     const transformStr = (k,vs) => {
 
@@ -243,7 +251,7 @@
 
     const setSVGAttrs = (el,attrs) => {
 
-        const svgAttrs = new Set(["class", "cx", "cy", "fill", "height", "id",
+        const svgAttrs = new Set(["class", "cx", "cy", "fill", "fill-rule", "fill-opacity", "height", "id",
                                   "opacity", "points", "r", "rx", "ry", "stroke", "stroke-dasharray",
                                   "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
                                   "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
@@ -292,6 +300,8 @@
     const line = attrs => merge({shape: "line"}, attrs);
 
     const polygon = attrs => merge({shape: "polygon"}, attrs);
+
+    const polyline = attrs => merge({shape: "polyline"}, attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
 
