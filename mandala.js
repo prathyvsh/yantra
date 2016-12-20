@@ -146,7 +146,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "line", "g"]);
+    const primitives = new Set(["rect", "circle", "ellipse", "line", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -165,6 +165,8 @@
     };
 
     const normalizeCircle = c => c;
+
+    const normalizeEllipse = c => c;
 
     const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
@@ -189,7 +191,7 @@
 
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup, line: normalizeLine};
+    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine};
 
     const transformStr = (k,vs) => {
 
@@ -275,6 +277,8 @@
 
     const circle = attrs => merge({shape: "circle"}, attrs);
 
+    const ellipse = attrs => merge({shape: "ellipse"}, attrs);
+
     const rect = attrs => merge({shape: "rect"}, attrs);
 
     const line = attrs => merge({shape: "line"}, attrs);
@@ -315,9 +319,9 @@
 
     }
 
-    const row = (s,dist) => parametrize(s, ({circle: "cx", rect: "x", g: "translateX"})[s.shape], dist);
+    const row = (s,dist) => parametrize(s, "translateX", dist);
 
-    const col = (s,dist) => parametrize(s, ({circle: "cy", rect: "y", g: "translateY"})[s.shape], dist);
+    const col = (s,dist) => parametrize(s, "translateY", dist);
 
     const grid = (shape,rowDist,colDist) => row(col(shape,colDist || rowDist), rowDist);
 
