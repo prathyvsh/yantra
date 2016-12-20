@@ -146,7 +146,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "g"]);
+    const primitives = new Set(["rect", "circle", "line", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -168,9 +168,28 @@
 
     const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
+    const normalizeLine = l => {
+
+        let {start, end} = l;
+
+        let newL = dissoc(l, "start", "end");
+
+        if(start && end) {
+
+            let [x1,y1] = start, [x2,y2] = end;
+
+            return merge(newL, {x1,y1,x2,y2});
+
+        } else {
+
+            return newL;
+
+        }
+    }
+
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup};
+    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup, line: normalizeLine};
 
     const transformStr = (k,vs) => {
 
@@ -248,9 +267,7 @@
 
     };
 
-    const generators = {circle: genShape, rect: genShape, g: genGroup};
-
-    const generateEntity = s => shapeApply(generators, s);
+    const generateEntity = s => (s["shape"] == "g") ? genGroup(s) : genShape(s);
 
     const compile = s => primitives.has(s["shape"]) ? generateEntity(parseEntity(s)) : throwError("Parse Error: Unknown Shape");
 
@@ -259,6 +276,8 @@
     const circle = attrs => merge({shape: "circle"}, attrs);
 
     const rect = attrs => merge({shape: "rect"}, attrs);
+
+    const line = attrs => merge({shape: "line"}, attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
 
