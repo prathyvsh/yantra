@@ -12,20 +12,14 @@
 
     const isArr = Array.isArray;
 
-    const isAll = (f,...v) => reduce((x,y) => x && y, true, map(f,...v));
-
     const isColor = x => typeof(x) == "object" && "colorspace" in x;
 
     const transpose = colls => {
 
-        const res = [];
+        let repetition = Math.min(...map(x => x.length, colls));
 
-        let repetition = reduce(Math.min,map(x => x.length, colls))
-
-        for(let i = 0; i < repetition; i++) res.push(map(x => x[i], colls));
-
-        return res;
-
+        return map(i => map(x => x[i], colls), range(0,repetition - 1));
+        
     }
 
     const repeat = (obj, times) => map(() => obj, new Array(times || 0));
@@ -118,15 +112,7 @@
 
         } else {
 
-            if(coll2) {
-
-                count = Math.min(coll.length, coll2.length);
-
-            } else {
-
-                count = coll.length;
-
-            }
+            count = coll2 ? Math.min(coll.length, coll2.length) : coll.length;
 
 	    for(let i = 0; i < count; i++) {
 
@@ -164,21 +150,27 @@
 
     const offsetRect = s => {
 
-        let {cx,cy,x,y,w,h} = s;
+        let {cx,cy,x,y,width,height} = s;
 
-        return (cx != null && cy != null) ? merge(dissoc(s, "cx", "cy"), {x: x || cx - w/2, y: y || cy - h/2}) : s;
+        let shape = dissoc(s, "cx", "cy");
+
+        if(cx != null) shape = merge(shape, {x: x || cx - width/2});
+
+        if(cy != null) shape = merge(shape, {y: y || cy - height/2});
+
+        return shape;
         
     };
 
     const normalizeCircle = c => c;
 
-    const normalizeRect = c => renameKeys(offsetRect(c), {w: "width", h: "height"});
+    const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
     const normalizeGroup = g => g;
 
     const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup};
 
-    const transformStr = (k, vs) => (vs && isAll(x => x != null, vs)) ? (k + "(" + vs.join(",") + ")") : "";
+    const transformStr = (k,vs) => vs && vs.every(x => x != null) ? (k + "(" + vs.join(",") + ")") : "";
 
     const normalizeTransform = sh => {
 
@@ -186,7 +178,7 @@
 
         if(translateX || translateY) { translateX = translateX || 0, translateY = translateY || 0};
 
-        const transformStrs = map(transformStr, ["translate", "rotate", "scale"], [translate || [translateX, translateY], rotate, scale]);
+        const transformStrs = map((k,v) => transformStr(k,[].concat(v)), ["translate", "rotate", "scale"], [translate || [translateX, translateY], rotate, scale]);
 
         const shape = dissoc(sh, "translate", "rotate", "scale", "translateX", "translateY");
 
@@ -222,7 +214,13 @@
         
         const camelToKebab = s => s.replace(/([A-Z])/g, "-$1").toLowerCase();
 
-        const setSVGAttr = (el,k,v) => svgAttrs.has(k) ? (el.setAttribute(k,v),el) : el;
+        const setSVGAttr = (el,k,v) => {
+
+            let svgKey = (k === "viewBox") ? k : camelToKebab(k);
+            
+            return svgAttrs.has(svgKey) ? (el.setAttribute(svgKey,v),el) : el;
+
+        }
 
         return kvreduce(setSVGAttr, el, attrs);
 
@@ -260,7 +258,11 @@
 
     const replicate = (obj,times) => g(repeat(obj,times));
 
+    const translate = (x,v) => merge(x, {translate: v});
+
     const rotate = (x,v) => merge(x, {rotate: v});
+
+    const scale = (x,v) => merge(x, {scale: v});
 
     const gmap = (f,g,v) => merge(g, {contents: map(f,g.contents,isArr(v) ? v : repeat(v,g.contents.length))});
     
