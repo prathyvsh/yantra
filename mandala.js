@@ -289,6 +289,10 @@
 
     const scale = (x,v) => merge(x, {scale: v});
 
+    const reflect = (x,k = "x") => merge(x, {scale: ({x: [-1,1], y: [1,-1]})[k]});
+
+    const mirror = (x,k = "x") => g([x,reflect(x, k)]);
+
     const gmap = (f,g,v) => merge(g, {contents: map(f,g.contents,isArr(v) ? v : repeat(v,g.contents.length))});
     
     const parametrize = (xs,k,attrs) => {
