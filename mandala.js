@@ -225,7 +225,7 @@
 
         const transformStrs = map(([k,v]) => transformStr(k,[].concat(v)), Object.entries(sh));
 
-        let shape = dissoc(sh, "translate", "rotate", "scale", "translateX", "translateY");
+        const shape = dissoc(sh, "translate", "rotate", "scale", "translateX", "translateY", "skewX", "skewY");
 
         const trsStr = transformStrs.join(" ").trim();
 
@@ -252,7 +252,7 @@
     const setSVGAttrs = (el,attrs) => {
 
         const svgAttrs = new Set(["class", "cx", "cy", "fill", "fill-rule", "fill-opacity", "height", "id",
-                                  "opacity", "points", "r", "rx", "ry", "stroke", "stroke-dasharray",
+                                  "opacity", "points", "r", "rx", "ry", "skewX", "skewY", "stroke", "stroke-dasharray",
                                   "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
                                   "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
                                   "width", "x", "x1", "x2", "y", "y1", "y2", "viewBox"]);
