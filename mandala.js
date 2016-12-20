@@ -146,7 +146,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "ellipse", "line", "g"]);
+    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -167,6 +167,14 @@
     const normalizeCircle = c => c;
 
     const normalizeEllipse = c => c;
+
+    const normalizePolygon = p => {
+        
+        let {points} = p;
+
+        return (isArr(points) ? merge(p, {points: points.join(" ")}) : p);
+
+ }
 
     const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
@@ -191,7 +199,7 @@
 
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine};
+    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon};
 
     const transformStr = (k,vs) => {
 
@@ -236,7 +244,7 @@
     const setSVGAttrs = (el,attrs) => {
 
         const svgAttrs = new Set(["class", "cx", "cy", "fill", "height", "id",
-                                  "opacity", "r", "rx", "ry", "stroke", "stroke-dasharray",
+                                  "opacity", "points", "r", "rx", "ry", "stroke", "stroke-dasharray",
                                   "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
                                   "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
                                   "width", "x", "x1", "x2", "y", "y1", "y2", "viewBox"]);
@@ -282,6 +290,8 @@
     const rect = attrs => merge({shape: "rect"}, attrs);
 
     const line = attrs => merge({shape: "line"}, attrs);
+
+    const polygon = attrs => merge({shape: "polygon"}, attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
 
