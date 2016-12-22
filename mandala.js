@@ -78,7 +78,7 @@
 
         const r = [], step = 1/count, magnitude = Math.abs(to - from);
 
-	for (let i = 0; i <= count; i++) {
+	for(let i = 0; i <= count; i++) {
 
 	    let progress = i * step, direction = (from < to) ? 1 : -1;
 
@@ -94,7 +94,7 @@
 
         if(!coll) { coll = init.slice(1); init = init[0];}
 
-        for(var i = 0; i < coll.length; i++) init = f(init,coll[i]);
+        for(let i = 0; i < coll.length; i++) init = f(init,coll[i]);
 
         return init;
 
@@ -234,7 +234,7 @@
 
         const node = svgNode(g.shape, g);
 
-        for (child of g.contents) node.appendChild(compile(child));
+        for(let child of g.contents) node.appendChild(compile(child));
 
         return node;
 
