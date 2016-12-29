@@ -146,7 +146,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "polyline", "g"]);
+    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "polyline", "path", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -205,9 +205,11 @@
         }
     }
 
+    const normalizePath = p => p;
+
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon, polyline: normalizePolyline};
+    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon, polyline: normalizePolyline, path: normalizePath};
 
     const transformStr = (k,vs) => {
 
@@ -251,7 +253,7 @@
 
     const setSVGAttrs = (el,attrs) => {
 
-        const svgAttrs = new Set(["class", "cx", "cy", "fill", "fill-rule", "fill-opacity", "height", "id",
+        const svgAttrs = new Set(["class", "cx", "cy", "d", "fill", "fill-rule", "fill-opacity", "height", "id",
                                   "opacity", "points", "r", "rx", "ry", "skewX", "skewY", "stroke", "stroke-dasharray",
                                   "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
                                   "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
@@ -302,6 +304,8 @@
     const polygon = attrs => merge({shape: "polygon"}, attrs);
 
     const polyline = attrs => merge({shape: "polyline"}, attrs);
+
+    const path = attrs => merge({shape: "path"} ,attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
 
@@ -373,7 +377,7 @@
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
 
-    const exports = {circle, rect, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
+    const exports = {circle, rect, polygon, polyline, path, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
 
     global.mandala = exports;
 
