@@ -12,7 +12,9 @@
 
     const isArr = Array.isArray;
 
-    const isColor = x => typeof(x) == "object" && "colorspace" in x;
+    const isColor = x => x && Object.prototype.hasOwnProperty.call(x, "colorspace");
+
+    const isShape = x => x && Object.prototype.hasOwnProperty.call(x, "shape")
 
     const transpose = colls => {
 
@@ -22,7 +24,13 @@
         
     }
 
-    const repeat = (obj, times) => map(() => obj, new Array(times || 0));
+    const repeat = (obj, times) => {
+
+        let reps = map(() => obj, new Array(times || 0));
+
+        return isShape(obj) && reps.length > 0 ? g(reps) : reps;
+        
+    }
 
     const range = (from, to, step) => {
 
@@ -140,13 +148,7 @@
 
     const primitives = new Set(["rect", "circle", "g"]);
 
-    const shapeApply = (fns,s) => {
-
-        let fn = fns[s["shape"]];
-
-        if(fn) return fn(s); else throwError("Shape function not found in " + fns);
-
-    };
+    const shapeApply = (fns,s) => (fns[s.shape])(s);
 
     const offsetRect = s => {
 
@@ -170,17 +172,23 @@
 
     const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup};
 
-    const transformStr = (k,vs) => vs && vs.every(x => x != null) ? (k + "(" + vs.join(",") + ")") : "";
+    const transformStr = (k,vs) => {
+
+        let keys = new Set(["translate", "rotate", "scale"]);
+
+        return keys.has(k) && vs && vs.every(x => x != null) ? (k + "(" + vs.join(",") + ")") : "";
+
+    }
 
     const normalizeTransform = sh => {
 
-        let {translateX, translateY, translate, rotate, scale} = sh;
+        let {translateX, translateY} = sh;
 
-        if(translateX || translateY) { translateX = translateX || 0, translateY = translateY || 0};
+        if(translateX || translateY) { sh = merge(sh,{translate: [translateX || 0, translateY || 0]}) };
 
-        const transformStrs = map((k,v) => transformStr(k,[].concat(v)), ["translate", "rotate", "scale"], [translate || [translateX, translateY], rotate, scale]);
+        const transformStrs = map(([k,v]) => transformStr(k,[].concat(v)), Object.entries(sh));
 
-        const shape = dissoc(sh, "translate", "rotate", "scale", "translateX", "translateY");
+        let shape = dissoc(sh, "translate", "rotate", "scale", "translateX", "translateY");
 
         const trsStr = transformStrs.join(" ").trim();
 
@@ -256,8 +264,6 @@
 
     const rgba = (r=0,g=0,b=0,a=1) => ({colorspace: "rgb", r,g,b,a});
 
-    const replicate = (obj,times) => g(repeat(obj,times));
-
     const translate = (x,v) => merge(x, {translate: v});
 
     const rotate = (x,v) => merge(x, {rotate: v});
@@ -270,7 +276,7 @@
 
         if(isArr(attrs)) {
 
-            return gmap(merge,replicate(xs,attrs.length),map(x => ({[k]: x}), attrs));
+            return gmap(merge,repeat(xs,attrs.length),map(x => ({[k]: x}), attrs));
 
         } else if(xs["shape"] == "g") return gmap(merge,xs,{[k]: attrs});
 
@@ -320,7 +326,7 @@
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
 
-    const exports = {parametrize, gmap, range, steps, circle, rect, g, ring, rotate, replicate, row, col, render, radToDeg, rgba, surface, setGlobals};
+    const exports = {circle, rect, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
 
     global.mandala = exports;
 
