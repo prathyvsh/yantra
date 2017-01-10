@@ -1,13 +1,12 @@
 * Mandala
-  
-Mandala is a declarative vector graphics library written in ES6. It describes, manipulates,
+
+[[https://rawgithub.com/prathyvsh/mandala/master/logo.svg]]
+
+Mandala is a declarative vector graphics library written for the web. It describes, manipulates,
 and renders geometry using data-oriented functional programming.
 
-You can dive into the [[http://prabros.com/bazaar/mandala/docs.html][docs]] section to learn more about the underlying
-abstractions or if you are more of a hands-on person, check out the [[http://prabros.com/bazaar/mandala/demos.html][demos]].
-
-Homepage http://prabros.com/bazaar/mandala/home.html
+[[http://prabros.com/bazaar/mandala/home.html][Home]] | [[http://prabros.com/bazaar/mandala/blog.html][Blog]] | [[http://prabros.com/bazaar/mandala/docs.html][Docs]] | [[http://prabros.com/bazaar/mandala/demos.html][Demos]] | [[http://prabros.com/bazaar/mandala/research.html][Research]]
 
 Feedback: http://twitter.com/prathyvsh
 
-Copyright (c) 2016 Prabros.
+(c) 2016 Prabros.
