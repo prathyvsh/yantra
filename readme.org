@@ -1,4 +1,5 @@
 * Mandala
+*Declarative Vector Graphics for the Web*
 
 [[https://rawgithub.com/prathyvsh/mandala/master/logo.svg]]
 
