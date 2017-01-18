@@ -1,6 +1,6 @@
-* Mandala
-
 [[https://rawgithub.com/prathyvsh/mandala/master/logo.svg]]
+* Mandala
+** Declarative Vector Graphics for the Web
 
 Mandala is a declarative vector graphics library written for the web. It describes, manipulates,
 and renders geometry using data-oriented functional programming.
