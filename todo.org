@@ -1,0 +1,20 @@
+* Code Change
+  
+- Insert defs on top of SVG instead of append
+
+* Testing
+- repeatedly
+- partition
+- cycleHead
+- idxmap
+- buildRoundedPolygon
+- transformStrs
+- vOps
+- circlePoint
+- ringPoints
+- regPoly
+- clipPath
+- randomizeIn : Are these really needed?
+- randomizeOn : Are these really needed?
+- ring
+- def

@@ -1,4 +1,4 @@
-(global => {
+((global) => {
 
     "use strict";
 
@@ -29,6 +29,14 @@
         let reps = map(() => obj, new Array(times || 0));
 
         return isShape(obj) && reps.length > 0 ? g(reps) : reps;
+        
+    }
+
+    const repeatedly = (f, times) => {
+
+        let reps = map(() => f(), new Array(times || 0));
+
+        return isShape(f()) && reps.length > 0 ? g(reps) : reps;
         
     }
 
@@ -134,6 +142,14 @@
 
     };
 
+    const mapidx = (f, ...colls) => {
+
+        let min = Math.min(...map(x => x.length, colls));
+
+        return map(f,range(0,min) ,...colls);
+        
+    }
+
     const kvreduce = (f,init,o) => {
 
         let accum = o || init;
@@ -146,7 +162,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "polyline", "path", "g"]);
+    const primitives = new Set(["rect", "circle", "ellipse", "line", "polygon", "roundedPolygon", "polyline", "path", "g", "clipPath", "mask"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -173,6 +189,40 @@
         let {points} = p;
 
         return (isArr(points) ? merge(p, {points: points.join(" ")}) : p);
+
+    }
+
+    const buildRoundedPolygon = attrs => {
+
+        let {x = 0,y = 0, width, r, sides = 3} = attrs;
+
+        const radius = width/Math.sqrt(3);
+        
+        // Should I name these cx and cy?
+        let loc = [x,y];
+
+        let points = ringPoints(radius,sides,loc, 90);
+
+        let pairs = partition(cycleHead(points, 1, true), 2,1);
+
+        let result = [];
+
+        for(let [v1,v2] of pairs) {
+
+            let rrVec = vMul(vUnit(vSub(v2,v1)), r);
+
+            result = result.concat([[v1, vAdd(v1,rrVec), vSub(v2,rrVec)]]);
+            
+        }
+
+
+        let [q1,q2,m] = result[result.length - 1];
+
+        let str = result.map(([q1,q2,l]) => `Q${q1} ${q2} L ${l}`);
+
+        let pathString = `M ${m} ${str} Z`;
+
+        return path(merge({d: pathString}, dissoc(attrs, "shape")));
 
     }
 
@@ -209,7 +259,11 @@
 
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon, polyline: normalizePolyline, path: normalizePath};
+    const normalizeClipPath = p => p;
+
+    const normalizeMask = p => p;
+
+    const normalizers = {circle: normalizeCircle, ellipse: normalizeEllipse, rect: normalizeRect, g: normalizeGroup, line: normalizeLine, polygon: normalizePolygon, roundedPolygon: buildRoundedPolygon, polyline: normalizePolyline, path: normalizePath, clipPath: normalizeClipPath, mask: normalizeMask};
 
     const transformStr = (k,vs) => {
 
@@ -225,7 +279,7 @@
 
         if(translateX || translateY) { sh = merge(sh,{translate: [translateX || 0, translateY || 0]}) };
 
-        const transformStrs = map(([k,v]) => transformStr(k,[].concat(v)), Object.entries(sh));
+        const transformStrs = kvreduce((i,k,v) => (i.push(transformStr(k,[].concat(v))), i), [], sh);
 
         const shape = dissoc(sh, "translate", "rotate", "scale", "translateX", "translateY", "skewX", "skewY");
 
@@ -253,10 +307,10 @@
 
     const setSVGAttrs = (el,attrs) => {
 
-        const svgAttrs = new Set(["class", "cx", "cy", "d", "fill", "fill-rule", "fill-opacity", "height", "id",
+        const svgAttrs = new Set(["class", "cx", "cy", "clip-path", "mask", "d", "fill", "fill-rule", "fill-opacity", "height", "id",
                                   "opacity", "points", "r", "rx", "ry", "skewX", "skewY", "stroke", "stroke-dasharray",
                                   "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
-                                  "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
+                                  "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform", "transform-origin",
                                   "width", "x", "x1", "x2", "y", "y1", "y2", "viewBox"]);
         
         const camelToKebab = s => s.replace(/([A-Z])/g, "-$1").toLowerCase();
@@ -277,7 +331,7 @@
 
     const genShape = sh => svgNode(sh.shape, sh);
 
-    const genGroup = g => {
+    const genComposite = g => {
 
         const node = svgNode(g.shape, g);
 
@@ -287,17 +341,47 @@
 
     };
 
-    const generateEntity = s => (s["shape"] == "g") ? genGroup(s) : genShape(s);
+    const generateEntity = s => (s["shape"] == "g" || s["shape"] == "mask") ? genComposite(s) : genShape(s);
 
     const compile = s => primitives.has(s["shape"]) ? generateEntity(parseEntity(s)) : throwError("Parse Error: Unknown Shape");
 
     /* API */
+
+    const vAdd = ([x1,y1], [x2,y2]) => [x1 + x2, y1 + y2];
+
+    const vSub = ([x1,y1], [x2,y2]) => [x1 - x2, y1 - y2];
+
+    const vMul = ([x,y], m) => [x * m, y * m];
+
+    const vDiv = ([x,y], m) => [x / m, y / m];
+
+    const vMag = ([x,y]) => Math.sqrt(x * x + y * y);
+
+    const vUnit = v => {
+
+        let mag = vMag(v);
+
+        return mag == 0 ? [0,0] : vDiv(v, mag);
+
+``}
+
+    const circlePoint = (angle, r, loc = [0,0]) => vAdd(loc, vMul([Math.cos(angle), Math.sin(angle)],r));
+
+    const ringPoints = (r, count, loc = [0,0], offset = 0) => map(i => circlePoint(((Math.PI * 2/count) * i + ((Math.PI / 180)) * offset),r,loc), range(0,count-1));
 
     const circle = attrs => merge({shape: "circle"}, attrs);
 
     const ellipse = attrs => merge({shape: "ellipse"}, attrs);
 
     const rect = attrs => merge({shape: "rect"}, attrs);
+
+    const regPoly = attrs => {
+
+        let {x = 0, y = 0,width = 10, sides = 3, r = 0} = attrs;
+
+        return (r === 0) ? polygon({points: ringPoints(width,sides,[x,y])}) : merge({shape: "roundedPolygon"}, attrs);
+
+    }
 
     const line = attrs => merge({shape: "line"}, attrs);
 
@@ -306,6 +390,10 @@
     const polyline = attrs => merge({shape: "polyline"}, attrs);
 
     const path = attrs => merge({shape: "path"} ,attrs);
+
+    const clipPath = (content = null, attrs) => merge({shape: "clipPath", contents: [].concat(content || [])}, attrs);
+
+    const mask = (content = null, attrs) => merge({shape: "mask", contents: [].concat(content || [])}, attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
 
@@ -323,7 +411,7 @@
 
     const gmap = (f,g,v) => merge(g, {contents: map(f,g.contents,isArr(v) ? v : repeat(v,g.contents.length))});
     
-    const parametrize = (xs,k,attrs) => {
+    const parametrizeOn = (xs,k,attrs) => {
 
         if(isArr(attrs)) {
 
@@ -335,13 +423,18 @@
 
     }
 
-    const sample = (xs,k,attrs) => {
+    const parametrizeIn = (xs,k,attrs) => {
 
-        if(typeof(attrs) === "function") return sample(xs,k,attrs(xs.contents.length))
+        if(typeof(attrs) === "function") return parametrizeOn(xs,k,attrs(xs.contents.length))
 
         else return gmap(merge,xs,isArr(attrs)? map(x => ({[k]: x}), attrs) : ({[k]: attrs}));
 
     }
+
+    // Randomize: Should I parametrize? What about when group is passed?
+    const randomizeOn = (xs,k,{bounds, count = 1, seed, asInt}) => parametrizeOn(xs, k, random(bounds[0], bounds[1], {count, seed, asInt}));
+
+    const randomizeIn = (xs,k,{bounds, count = 1, seed, asInt}) => parametrizeIn(xs, k, random(bounds[0], bounds[1], {count, seed, asInt}));
 
     const row = (s,dist) => parametrize(s, "translateX", dist);
 
@@ -349,19 +442,63 @@
 
     const grid = (shape,rowDist,colDist) => row(col(shape,colDist || rowDist), rowDist);
 
-    const ring = (node, r = 10, count, loc) => {
+    const ring = (node, r = 10, count = 10, loc = [0,0]) => parametrizeOn(node, "translate", ringPoints(r, count, loc));
 
-        const circlePoint = (angle,r,loc) => [Math.sin(angle) * r + loc[0], Math.cos(angle) * r + loc[1]];
+    const random = (min, max, attrs = {}) => {
 
-        const ringPoints = (count, r, loc) => map(i => circlePoint((Math.PI * 2/count) * i,r,loc), range(0,count-1));
+        if(max == null) { max = min; min = 0};
 
-        count = count || 10, loc = !isArr(loc) && [0,0] || loc;
+        let {asInt, seed = Date.now() + Math.random() * 1000000, count = 1} = attrs;
 
-        return parametrize(node, "translate", ringPoints(count, r, loc));
+        const distributor = 2 ** 13 + 1;
 
+        const prime = 1987;
+
+        const threshold = 2 ** 32;
+
+        const rnd = (seed) => ((seed * distributor) + prime) % threshold;
+
+        let res = [];
+
+        let nextSeed = seed;
+
+        for(let i = 0; i < count; i++) {
+
+            let num = rnd(nextSeed);
+
+            nextSeed = num;
+
+            let normalized = num / threshold;
+
+            let val = min + normalized * (max - min);
+            
+            res.push(asInt ? Math.round(val) : val);
+        }
+
+        return (count == 1) ? res[0] : res;
+        
     }
 
-    const render = (canvas,s) => (canvas.appendChild(compile(s)), s);
+    const render = (canvas,s) => {
+
+        let el = compile(s);
+
+        canvas.appendChild(el);
+
+        return el;
+    }
+
+    const def = (canvas, defn) => {
+
+        let el = compile(defn);
+
+        let defs = canvas.querySelector("defs") || canvas.appendChild(svgNode("defs"));
+
+        defs.appendChild(el);
+
+        return el;
+        
+    }
 
     const surface = attrs => {
 
@@ -375,10 +512,15 @@
 
     const radToDeg = x => (180/Math.PI) * x;
 
-    const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
+    const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, api);
 
-    const exports = {circle, rect, polygon, polyline, path, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
+    const api = {circle, rect, polygon, regPoly, polyline, path, clipPath, mask, g, rgba, render, repeat, repeatedly, translate, rotate, scale, range, steps, parametrizeOn, parametrizeIn, randomizeIn, gmap, row, col, grid, ringPoints, ring, radToDeg, random, surface, map, def};
 
-    global.mandala = exports;
+    global.mandala = merge(api, {setGlobals});
+
+    if(typeof module !== "undefined" && module.exports) {
+        module.exports = mandala;
+    }
 
 })(this);
+
