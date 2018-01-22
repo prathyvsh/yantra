@@ -341,9 +341,20 @@
 
     };
 
+    const postGen = (attrs,node) => {
+
+        if(attrs.hasOwnProperty("origin")) {
+            node.style.transformBox = "fill-box";
+            node.style.transformOrigin = attrs.origin;
+        }
+
+        return node;
+        
+    }
+
     const generateEntity = s => (s["shape"] == "g" || s["shape"] == "mask") ? genComposite(s) : genShape(s);
 
-    const compile = s => primitives.has(s["shape"]) ? generateEntity(parseEntity(s)) : throwError("Parse Error: Unknown Shape");
+    const compile = s => primitives.has(s["shape"]) ? postGen(s,generateEntity(parseEntity(s))) : throwError("Parse Error: Unknown Shape");
 
     /* API */
 
@@ -363,7 +374,7 @@
 
         return mag == 0 ? [0,0] : vDiv(v, mag);
 
-``}
+}
 
     const circlePoint = (angle, r, loc = [0,0]) => vAdd(loc, vMul([Math.cos(angle), Math.sin(angle)],r));
 
@@ -374,6 +385,8 @@
     const ellipse = attrs => merge({shape: "ellipse"}, attrs);
 
     const rect = attrs => merge({shape: "rect"}, attrs);
+
+    const capsule = attrs => rect(merge(attrs, {rx: (Math.min(attrs.width, attrs.height) || 0)/2}));
 
     const regPoly = attrs => {
 
@@ -500,6 +513,23 @@
         
     }
 
+    const centerCanvas = (canvas) => {
+
+        let {width, height} = canvas.getBoundingClientRect();
+
+        let viewBox = `${-width/2} ${-height/2} ${width} ${height}`;
+
+        canvas.setAttribute("viewBox", viewBox);
+        
+    }
+
+    const centerOrigin = (el) => {
+
+        el.style.transformBox = "fill-box";
+        el.style.transformOrigin = "center";
+
+    }
+
     const surface = attrs => {
 
         let s = svgNode("svg", attrs);
@@ -514,7 +544,7 @@
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, api);
 
-    const api = {circle, rect, polygon, regPoly, polyline, path, clipPath, mask, g, rgba, render, repeat, repeatedly, translate, rotate, scale, range, steps, parametrizeOn, parametrizeIn, randomizeIn, gmap, row, col, grid, ringPoints, ring, radToDeg, random, surface, map, def};
+    const api = {circle, rect, capsule, polygon, regPoly, polyline, path, clipPath, mask, g, rgba, render, repeat, repeatedly, translate, rotate, scale, range, steps, parametrizeOn, parametrizeIn, randomizeIn, gmap, row, col, grid, ringPoints, ring, radToDeg, random, surface, map, def, centerOrigin, centerCanvas, isShape};
 
     global.mandala = merge(api, {setGlobals});
 
