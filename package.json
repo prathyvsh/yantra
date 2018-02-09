@@ -2,13 +2,13 @@
   "name": "yantra",
   "version": "0.0.2",
   "description": "Declarative vector graphics library for the web",
-  "main": "mandala.js",
+  "main": "y.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prathyvsh/mandala.git"
+    "url": "git+https://github.com/prathyvsh/yantra.git"
   },
   "keywords": [
     "functional",
@@ -36,7 +36,7 @@
   "author": "Prathyush Pramod <hi@prabros.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/prathyvsh/mandala/issues"
+    "url": "https://github.com/prathyvsh/yantra/issues"
   },
   "homepage": "https://github.com/prathyvsh/mandala/docs.html"
 }
