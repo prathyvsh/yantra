@@ -1,0 +1,42 @@
+{
+  "name": "yantra",
+  "version": "0.0.1",
+  "description": "Declarative vector graphics library for the web",
+  "main": "mandala.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prathyvsh/mandala.git"
+  },
+  "keywords": [
+    "functional",
+    "programming",
+    "graphics",
+    "functional",
+    "programming",
+    "vector",
+    "graphics",
+    "functional",
+    "programming",
+    "javascript",
+    "graphics",
+    "functional",
+    "drawing",
+    "declarative",
+    "vector",
+    "graphics",
+    "data-oriented",
+    "graphics",
+    "functional",
+    "2d",
+    "graphics"
+  ],
+  "author": "Prathyush Pramod <hi@prabros.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/prathyvsh/mandala/issues"
+  },
+  "homepage": "https://github.com/prathyvsh/mandala/docs.html"
+}

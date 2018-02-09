@@ -328,6 +328,6 @@
 
     const exports = {circle, rect, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
 
-    global.mandala = exports;
+    global.yantra = exports;
 
 })(this);
