@@ -1,6 +1,6 @@
 {
   "name": "yantra",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Declarative vector graphics library for the web",
   "main": "y.js",
   "scripts": {
