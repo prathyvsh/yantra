@@ -220,7 +220,7 @@
 				  "opacity", "r", "rx", "ry", "stroke", "stroke-dasharray",
 				  "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
 				  "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
-				  "text-anchor", "lengthAdjust", "textLength",
+				  "text-anchor", "lengthAdjust", "textLength", "style",
 				  "width", "x", "x1", "x2", "y", "y1", "y2", "viewBox"]);
 	
 	const camelToKebab = s => s.replace(/([A-Z])/g, "-$1").toLowerCase();
