@@ -146,7 +146,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "g"]);
+    const primitives = new Set(["rect", "circle", "text", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -168,9 +168,11 @@
 
     const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
+    const normalizeText = t => t;
+
     const normalizeGroup = g => g;
 
-    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup};
+    const normalizers = {circle: normalizeCircle, rect: normalizeRect, text: normalizeText, g: normalizeGroup};
 
     const transformStr = (k,vs) => {
 
@@ -214,10 +216,11 @@
 
     const setSVGAttrs = (el,attrs) => {
 
-	const svgAttrs = new Set(["class", "cx", "cy", "fill", "height", "id",
+	const svgAttrs = new Set(["class", "cx", "cy", "dx", "dy", "fill", "height", "id",
 				  "opacity", "r", "rx", "ry", "stroke", "stroke-dasharray",
 				  "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
 				  "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
+				  "text-anchor", "lengthAdjust", "textLength",
 				  "width", "x", "x1", "x2", "y", "y1", "y2", "viewBox"]);
 	
 	const camelToKebab = s => s.replace(/([A-Z])/g, "-$1").toLowerCase();
@@ -238,6 +241,16 @@
 
     const genShape = sh => svgNode(sh.shape, sh);
 
+    const genText = t => {
+
+	const node = svgNode(t.shape, dissoc(t, "contents"));
+
+	node.textContent = t.contents;
+
+	return node;
+	
+    }
+
     const genGroup = g => {
 
 	const node = svgNode(g.shape, g);
@@ -248,7 +261,7 @@
 
     };
 
-    const generators = {circle: genShape, rect: genShape, g: genGroup};
+    const generators = {circle: genShape, rect: genShape, text: genText, g: genGroup};
 
     const generateEntity = s => shapeApply(generators, s);
 
@@ -259,6 +272,8 @@
     const circle = attrs => merge({shape: "circle"}, attrs);
 
     const rect = attrs => merge({shape: "rect"}, attrs);
+
+    const text = (text, attrs) => merge({shape: "text", contents: text || ""}, attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
 
@@ -326,7 +341,7 @@
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
 
-    const exports = {circle, rect, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
+    const exports = {circle, rect, text, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
 
     global.y = exports;
 
