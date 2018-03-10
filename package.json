@@ -2,7 +2,7 @@
   "name": "yantra",
   "version": "0.0.5",
   "description": "Declarative vector graphics library for the web",
-  "main": "y.js",
+  "main": "yantra.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -14,7 +14,7 @@
 
     const isColor = x => x && Object.prototype.hasOwnProperty.call(x, "colorspace");
 
-    const isShape = x => x && Object.prototype.hasOwnProperty.call(x, "shape")
+    const isShape = x => x && Object.prototype.hasOwnProperty.call(x, "shape");
 
     const transpose = colls => {
 
@@ -22,7 +22,42 @@
 
 	return map(i => map(x => x[i], colls), range(0,repetition - 1));
 	
-    }
+    };
+
+    const random = (min, max, attrs = {}) => {
+
+        if(max == null) { max = min; min = 0; };
+
+        let {asInt, seed = Date.now() + Math.random() * 1000000, count = 1} = attrs;
+
+        const distributor = 2 ** 13 + 1;
+
+        const prime = 1987;
+
+        const threshold = 2 ** 32;
+
+        const rnd = (seed) => ((seed * distributor) + prime) % threshold;
+
+        let res = [];
+
+        let nextSeed = seed;
+
+        for(let i = 0; i < count; i++) {
+
+            let num = rnd(nextSeed);
+
+            nextSeed = num;
+
+            let normalized = num / threshold;
+
+            let val = min + normalized * (max - min);
+            
+            res.push(asInt ? Math.round(val) : val);
+        }
+
+        return (count == 1) ? res[0] : res;
+        
+    };
 
     const repeat = (obj, times) => {
 
@@ -30,7 +65,15 @@
 
 	return isShape(obj) && reps.length > 0 ? g(reps) : reps;
 	
-    }
+    };
+
+    const repeatedly = (f, times) => {
+
+        let reps = map(() => f(), new Array(times || 0));
+
+        return isShape(f()) && reps.length > 0 ? g(reps) : reps;
+        
+    };
 
     const range = (from, to, step) => {
 
@@ -140,13 +183,13 @@
 
 	return Object.keys(accum).reduce((i, k) => f(i,k,accum[k]), init || {});
 
-    }
+    };
 
-    const throwError = msg => { throw new Error(msg) };
+    const throwError = msg => { throw new Error(msg); };
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "text", "g"]);
+    const primitives = new Set(["rect", "circle", "line", "polyline", "text", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -166,13 +209,33 @@
 
     const normalizeCircle = c => c;
 
+    const normalizeLine = l => {
+
+	let [[x1,y1], [x2,y2]] = l.points;
+	
+	return merge(dissoc(l, "points"), {x1,y1,x2,y2});
+
+    };
+
+    const normalizePolyline = p => {
+
+        let {points} = p;
+
+        return (isArr(points) ? merge(p, {points: points.join(" ")}) : p);
+
+    };
+
+    const line = attrs => merge({shape: "line"}, attrs);
+
+    const polygon = attrs => merge({shape: "polygon"}, attrs);
+
+    const polyline = attrs => merge({shape: "polyline"}, attrs);
+
     const normalizeRect = c => offsetRect(renameKeys(c, {w: "width", h: "height"}));
 
     const normalizeText = t => t;
 
     const normalizeGroup = g => g;
-
-    const normalizers = {circle: normalizeCircle, rect: normalizeRect, text: normalizeText, g: normalizeGroup};
 
     const transformStr = (k,vs) => {
 
@@ -180,13 +243,13 @@
 
 	return keys.has(k) && vs && vs.every(x => x != null) ? (k + "(" + vs.join(",") + ")") : "";
 
-    }
+    };
 
     const normalizeTransform = sh => {
 
 	let {translateX, translateY} = sh;
 
-	if(translateX || translateY) { sh = merge(sh,{translate: [translateX || 0, translateY || 0]}) };
+	if(translateX || translateY) { sh = merge(sh,{translate: [translateX || 0, translateY || 0]}); };
 
 	const transformStrs = map(([k,v]) => transformStr(k,[].concat(v)), Object.entries(sh));
 
@@ -211,13 +274,15 @@
 	return merge(sh, fill && {fill}, stroke && {stroke});
 	
     };
+
+    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup, text: normalizeText, line: normalizeLine, polyline: normalizePolyline};
     
     const parseEntity = s => normalizeColor(normalizeTransform(shapeApply(normalizers,s)));
 
     const setSVGAttrs = (el,attrs) => {
 
 	const svgAttrs = new Set(["class", "cx", "cy", "dx", "dy", "fill", "height", "id",
-				  "opacity", "r", "rx", "ry", "stroke", "stroke-dasharray",
+				  "opacity", "points", "r", "rx", "ry", "stroke", "stroke-dasharray",
 				  "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
 				  "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
 				  "text-anchor", "lengthAdjust", "textLength", "style",
@@ -231,7 +296,7 @@
 	    
 	    return svgAttrs.has(svgKey) ? (el.setAttribute(svgKey,v),el) : el;
 
-	}
+	};
 
 	return kvreduce(setSVGAttr, el, attrs);
 
@@ -249,7 +314,7 @@
 
 	return node;
 	
-    }
+    };
 
     const genGroup = g => {
 
@@ -261,17 +326,37 @@
 
     };
 
-    const generators = {circle: genShape, rect: genShape, text: genText, g: genGroup};
-
-    const generateEntity = s => shapeApply(generators, s);
+    const generateEntity = s => (s["shape"] == "g") ? genGroup(s) : (s["shape"] == "text") ? genText(s) : genShape(s);
 
     const compile = s => primitives.has(s["shape"]) ? generateEntity(parseEntity(s)) : throwError("Parse Error: Unknown Shape");
 
     /* API */
 
+    const vAdd = ([x1,y1], [x2,y2]) => [x1 + x2, y1 + y2];
+
+    const vSub = ([x1,y1], [x2,y2]) => [x1 - x2, y1 - y2];
+
+    const vMul = ([x,y], m) => [x * m, y * m];
+
+    const vDiv = ([x,y], m) => [x / m, y / m];
+
+    const vMag = ([x,y]) => Math.sqrt(x * x + y * y);
+
+    const vUnit = v => {
+
+        let mag = vMag(v);
+
+        return mag == 0 ? [0,0] : vDiv(v, mag);
+
+    };
+
     const circle = attrs => merge({shape: "circle"}, attrs);
 
     const rect = attrs => merge({shape: "rect"}, attrs);
+
+    const path = attrs => merge({shape: "path"}, attrs);
+
+    const qcurve = attrs => merge({shape: "path", d: attrs.points.join(" ")}, attrs);
 
     const text = (text, attrs) => merge({shape: "text", contents: text || ""}, attrs);
 
@@ -297,15 +382,15 @@
 
 	else return merge(xs,{[k]: attrs});
 
-    }
+    };
 
     const sample = (xs,k,attrs) => {
 
-	if(typeof(attrs) === "function") return sample(xs,k,attrs(xs.contents.length))
+	if(typeof(attrs) === "function") return sample(xs,k,attrs(xs.contents.length));
 
 	else return gmap(merge,xs,isArr(attrs)? map(x => ({[k]: x}), attrs) : ({[k]: attrs}));
 
-    }
+    };
 
     const row = (s,dist) => parametrize(s, ({circle: "cx", rect: "x", g: "translateX"})[s.shape], dist);
 
@@ -323,7 +408,7 @@
 
 	return parametrize(node, "translate", ringPoints(count, r, loc));
 
-    }
+    };
 
     const render = (canvas,s) => (canvas.appendChild(compile(s)), s);
 
@@ -335,15 +420,17 @@
 
 	return s;
 
-    }
+    };
+
+    const dbg = (val) => text(JSON.stringify(val), {fill: "white"});
 
     const radToDeg = x => (180/Math.PI) * x;
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
 
-    const exports = {circle, rect, text, g, rgba, render, repeat, translate, rotate, scale, range, steps, sample, parametrize, gmap, row, col, grid, ring, radToDeg, surface, setGlobals};
+    const exports = {circle, rect, line, polyline, text, g, rgba, render, repeat, repeatedly, random, translate, rotate, scale, range, steps, sample, parametrize, map, gmap, row, col, grid, ring, radToDeg, surface, setGlobals, dbg};
 
-    global.y = exports;
+    global.yantra = exports;
 
     if(typeof module !== "undefined" && module.exports) module.exports = exports;
 
