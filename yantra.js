@@ -189,7 +189,7 @@
 
     /* Compiler */
 
-    const primitives = new Set(["rect", "circle", "line", "polyline", "text", "g"]);
+    const primitives = new Set(["rect", "circle", "line", "polyline", "text", "path", "g"]);
 
     const shapeApply = (fns,s) => (fns[s.shape])(s);
 
@@ -237,6 +237,19 @@
 
     const normalizeGroup = g => g;
 
+    const normalizePath = p => {
+
+	let {d} = p, points = d;
+
+	let Z = d.z;
+
+	if(typeof d == "object")
+	points = Object.entries(dissoc(d, "Z")).map(([k,v]) => k + " " + v.join(" ")).join(" ");
+
+	return merge(p, {d: Z ? points + " Z" : points});
+
+    };
+
     const transformStr = (k,vs) => {
 
 	let keys = new Set(["translate", "rotate", "scale"]);
@@ -275,13 +288,13 @@
 	
     };
 
-    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup, text: normalizeText, line: normalizeLine, polyline: normalizePolyline};
+    const normalizers = {circle: normalizeCircle, rect: normalizeRect, g: normalizeGroup, text: normalizeText, line: normalizeLine, polyline: normalizePolyline, path: normalizePath};
     
     const parseEntity = s => normalizeColor(normalizeTransform(shapeApply(normalizers,s)));
 
     const setSVGAttrs = (el,attrs) => {
 
-	const svgAttrs = new Set(["class", "cx", "cy", "dx", "dy", "fill", "height", "id",
+	const svgAttrs = new Set(["class", "cx", "cy", "d", "dx", "dy", "fill", "height", "id",
 				  "opacity", "points", "r", "rx", "ry", "stroke", "stroke-dasharray",
 				  "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
 				  "stroke-miterlimit", "stroke-opacity", "stroke-width", "transform",
@@ -356,8 +369,6 @@
 
     const path = attrs => merge({shape: "path"}, attrs);
 
-    const qcurve = attrs => merge({shape: "path", d: attrs.points.join(" ")}, attrs);
-
     const text = (text, attrs) => merge({shape: "text", contents: text || ""}, attrs);
 
     const g = (contents = null, attrs) => merge({shape: "g", contents: [].concat(contents || [])}, attrs);
@@ -428,7 +439,7 @@
 
     const setGlobals = () => kvreduce((i,k,v) => global[k] = v ,{}, exports);
 
-    const exports = {circle, rect, line, polyline, text, g, rgba, render, repeat, repeatedly, random, translate, rotate, scale, range, steps, sample, parametrize, map, gmap, row, col, grid, ring, radToDeg, surface, setGlobals, dbg};
+    const exports = {rect, circle, line, polyline, path, text, g, rgba, render, repeat, repeatedly, random, translate, rotate, scale, range, steps, sample, parametrize, map, gmap, row, col, grid, ring, radToDeg, surface, setGlobals, dbg};
 
     global.yantra = exports;
 
